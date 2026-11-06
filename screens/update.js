@@ -1,5 +1,4 @@
-
-import React, { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -164,7 +163,6 @@ export default function UpdateClothesScreen({ navigation, route }) {
 
         {/* Main Card */}
         <View style={styles.card}>
-          {/* รูปภาพ */}
           <Text style={styles.label}>รูปภาพ</Text>
 
           <View style={styles.imageActionRow}>
@@ -189,7 +187,7 @@ export default function UpdateClothesScreen({ navigation, route }) {
             </TouchableOpacity>
           </View>
 
-          {/* รูปตัวอย่าง กดเพื่อเปิด Popup */}
+          {/* รูปตัวอย่าง */}
           {selectedImage ? (
             <TouchableOpacity
               activeOpacity={0.85}
@@ -339,7 +337,7 @@ export default function UpdateClothesScreen({ navigation, route }) {
         onRequestClose={() => setImageModalVisible(false)}
       >
         <View style={styles.popupOverlay}>
-          {/* แตะพื้นที่ด้านนอกเพื่อปิด */}
+          {/* แตะด้านนอกเพื่อปิด */}
           <TouchableOpacity
             style={StyleSheet.absoluteFillObject}
             activeOpacity={1}
@@ -347,20 +345,25 @@ export default function UpdateClothesScreen({ navigation, route }) {
           />
 
           <View style={styles.popupContainer}>
-            <TouchableOpacity
-              style={styles.popupClose}
-              onPress={() => setImageModalVisible(false)}
-              activeOpacity={0.8}
-            >
-              <X size={22} color="#49382E" />
-            </TouchableOpacity>
+            <View style={styles.popupHeader}>
 
-            
-            <Image
-              source={{ uri: selectedImage }}
-              style={styles.popupImage}
-              resizeMode="contain"
-            />
+              <TouchableOpacity
+                style={styles.popupClose}
+                onPress={() => setImageModalVisible(false)}
+                activeOpacity={0.8}
+              >
+                <X size={22} color="#49382E" />
+              </TouchableOpacity>
+            </View>
+
+            {/* กรอบรูปภาพมุมมน */}
+            <View style={styles.popupImageWrapper}>
+              <Image
+                source={{ uri: selectedImage }}
+                style={styles.popupImage}
+                resizeMode="contain"
+              />
+            </View>
           </View>
         </View>
       </Modal>
@@ -381,7 +384,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
 
-  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -414,7 +416,6 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
-  // Card
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
@@ -436,7 +437,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
 
-  // Image buttons
   imageActionRow: {
     flexDirection: 'row',
     gap: 10,
@@ -479,7 +479,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Preview
   previewImageContainer: {
     width: '100%',
     height: 210,
@@ -547,10 +546,10 @@ const styles = StyleSheet.create({
   // Popup
   popupOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 25,
+    paddingHorizontal: 12,
   },
 
   popupContainer: {
@@ -560,9 +559,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: 18,
-    paddingTop: 55,
-    justifyContent: 'center',
-    alignItems: 'center',
     elevation: 12,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 6 },
@@ -570,11 +566,15 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
   },
 
+  popupHeader: {
+    height: 45,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+
   popupClose: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 2,
     width: 38,
     height: 38,
     borderRadius: 19,
@@ -583,13 +583,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  popupTitle: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    color: '#49382E',
-    fontSize: 16,
-    fontWeight: '800',
+  popupImageWrapper: {
+    flex: 1,
+    width: '100%',
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#F7F3EE',
   },
 
   popupImage: {
@@ -597,7 +596,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
-  // Input
   input: {
     backgroundColor: '#FAF7F3',
     borderWidth: 1,
@@ -609,7 +607,6 @@ const styles = StyleSheet.create({
     color: '#49382E',
   },
 
-  // Dropdown
   dropdownWrap: {
     marginBottom: 2,
     zIndex: 10,
@@ -667,7 +664,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  // Notes
   textArea: {
     backgroundColor: '#FAF7F3',
     borderWidth: 1,
@@ -680,7 +676,6 @@ const styles = StyleSheet.create({
     color: '#49382E',
   },
 
-  // Save button
   saveButton: {
     marginTop: 26,
     backgroundColor: '#B97955',
@@ -703,7 +698,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  // Delete button
   deleteButton: {
     marginTop: 14,
     backgroundColor: '#FFF5F3',
