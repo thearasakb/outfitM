@@ -2,7 +2,6 @@
 import React, {
   useContext,
   useState,
-  useRef,
   useEffect,
   useMemo,
 } from "react";
@@ -32,10 +31,11 @@ import {
 import { PhotoContext } from "../context/PhotoContext";
 
 // ------------------------------
-// หมวดหมู่ (ไม่มีไอคอน)
+// หมวดหมู่
 // ------------------------------
 
 const categories = [
+  { label: "ทั้งหมด" },
   { label: "รายการโปรด", icon: "heart" },
   { label: "เสื้อ" },
   { label: "กางเกง" },
@@ -132,6 +132,7 @@ function SwipeClothesItem({
   onDelete,
 }) {
   const [translateX] = useState(() => new Animated.Value(0));
+
   let startX = 0;
 
   useEffect(() => {
@@ -162,13 +163,20 @@ function SwipeClothesItem({
 
         onPanResponderMove: (_, gesture) => {
           const nextX = startX + gesture.dx;
-          const limitedX = Math.max(-ACTION_WIDTH, Math.min(0, nextX));
+
+          const limitedX = Math.max(
+            -ACTION_WIDTH,
+            Math.min(0, nextX)
+          );
+
           translateX.setValue(limitedX);
         },
 
         onPanResponderRelease: (_, gesture) => {
           const nextX = startX + gesture.dx;
+
           const shouldOpen = nextX < -ACTION_WIDTH / 2;
+
           onRequestOpen(shouldOpen ? item.id : null);
         },
 
@@ -211,7 +219,10 @@ function SwipeClothesItem({
         ]}
         {...panResponder.panHandlers}
       >
-        <RowContent item={item} onPress={handleViewPress} />
+        <RowContent
+          item={item}
+          onPress={handleViewPress}
+        />
       </Animated.View>
     </View>
   );
@@ -229,11 +240,11 @@ export default function WardrobeScreen({ navigation }) {
     removePhoto,
   } = useContext(PhotoContext);
 
+  // เริ่มต้นที่หมวดหมู่ทั้งหมด
   const [activeCategory, setActiveCategory] =
-    useState("รายการโปรด");
+    useState("ทั้งหมด");
 
-  const [openItemId, setOpenItemId] =
-    useState(null);
+  const [openItemId, setOpenItemId] = useState(null);
 
   const savedItems = (photos || []).map((photo) => ({
     id: photo.id,
@@ -246,33 +257,55 @@ export default function WardrobeScreen({ navigation }) {
 
   const items = savedItems;
 
+  // ------------------------------
   // กรองหมวดหมู่
+  // ------------------------------
+
   const filteredItems = items.filter((item) => {
+    // แสดงเสื้อผ้าทั้งหมด
+    if (activeCategory === "ทั้งหมด") {
+      return true;
+    }
+
+    // แสดงเฉพาะรายการโปรด
     if (activeCategory === "รายการโปรด") {
       return item.favorite;
     }
 
+    // แสดงตามหมวดหมู่ที่เลือก
     return item.category === activeCategory;
   });
 
+  // ------------------------------
   // เพิ่มเสื้อผ้า
+  // ------------------------------
+
   const addItem = () => {
     navigation.navigate("UploadClothes");
   };
 
+  // ------------------------------
   // ดูรายละเอียด
+  // ------------------------------
+
   const handleView = (item) => {
     navigation.navigate("UpdateClothes", {
       item,
     });
   };
 
+  // ------------------------------
   // ถูกใจ
+  // ------------------------------
+
   const handleLike = (item) => {
     toggleFavorite(item.id);
   };
 
+  // ------------------------------
   // ลบเสื้อผ้า
+  // ------------------------------
+
   const handleDelete = (item) => {
     Alert.alert(
       "ลบรายการเสื้อผ้า",
@@ -294,6 +327,10 @@ export default function WardrobeScreen({ navigation }) {
     );
   };
 
+  // ------------------------------
+  // UI
+  // ------------------------------
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -313,7 +350,7 @@ export default function WardrobeScreen({ navigation }) {
         </View>
       </View>
 
-      {/* Category - ไม่มีไอคอน */}
+      {/* Category */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -323,7 +360,9 @@ export default function WardrobeScreen({ navigation }) {
         {categories.map((category) => {
           const active =
             activeCategory === category.label;
-          const isFavorites = category.label === "รายการโปรด";
+
+          const isFavorites =
+            category.label === "รายการโปรด";
 
           return (
             <TouchableOpacity
