@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from "react-native";
 
 import {
@@ -16,12 +17,35 @@ import {
   Check,
 } from "lucide-react-native";
 
+const getItemUri = (item) => {
+  if (!item || typeof item !== "object") return null;
+
+  const imageValue =
+    item.uri ||
+    item.imageUri ||
+    item.image ||
+    item.url ||
+    null;
+
+  if (typeof imageValue === "string") return imageValue;
+
+  if (imageValue && typeof imageValue.uri === "string") {
+    return imageValue.uri;
+  }
+
+  return null;
+};
+
 export default function ResultScreen({ route, navigation }) {
   const recommendation = route?.params?.recommendation || {
     title: "Everyday Fresh",
     text: "No recommendation data available yet.",
-    items: ["Classic", "Clean", "Comfort"],
+    items: [],
   };
+
+  const items = Array.isArray(recommendation.items)
+    ? recommendation.items
+    : [];
 
   return (
     <ScrollView
@@ -29,7 +53,6 @@ export default function ResultScreen({ route, navigation }) {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -47,14 +70,10 @@ export default function ResultScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* Result Card */}
       <View style={styles.card}>
         <View style={styles.aiBadge}>
           <Sparkles size={15} color="#C17D55" />
-
-          <Text style={styles.aiBadgeText}>
-            AI STYLIST
-          </Text>
+          <Text style={styles.aiBadgeText}>AI STYLIST</Text>
         </View>
 
         <View style={styles.resultIcon}>
@@ -75,40 +94,85 @@ export default function ResultScreen({ route, navigation }) {
 
         <View style={styles.divider} />
 
-        {/* Recommended Pieces */}
         <View style={styles.itemHeading}>
-          <Text style={styles.itemLabel}>
-            ไอเทมที่แนะนำ
-          </Text>
-
+          <Text style={styles.itemLabel}>ไอเทมที่แนะนำ</Text>
           <Text style={styles.itemCount}>
-            {recommendation.items.length} items
+            {items.length} items
           </Text>
         </View>
 
         <View style={styles.itemsContainer}>
-          {recommendation.items.map((item, index) => (
-            <View key={`${item}-${index}`} style={styles.itemCard}>
-              <View style={styles.itemNumber}>
-                <Text style={styles.itemNumberText}>
-                  {index + 1}
-                </Text>
-              </View>
+          {items.length > 0 ? (
+            items.map((item, index) => {
+              const itemName =
+                typeof item === "string"
+                  ? item
+                  : item?.name || item?.title || "เสื้อผ้า";
 
-              <Text style={styles.chipText}>
-                {item}
+              const itemUri = getItemUri(item);
+
+              const itemCategory =
+                typeof item === "object" && item !== null
+                  ? item.category
+                  : null;
+
+              return (
+                <View
+                  key={`${item?.id || itemName}-${index}`}
+                  style={styles.itemCard}
+                >
+                  {itemUri ? (
+                    <Image
+                      source={{ uri: itemUri }}
+                      style={styles.itemImage}
+                      resizeMode="cover"
+                      onError={(error) => {
+                        console.log(
+                          "Result image error:",
+                          itemName,
+                          itemUri,
+                          error.nativeEvent
+                        );
+                      }}
+                    />
+                  ) : (
+                    <View style={styles.itemImagePlaceholder}>
+                      <Shirt size={30} color="#C17D55" />
+                    </View>
+                  )}
+
+                  <View style={styles.itemDetails}>
+                    <Text style={styles.chipText}>
+                      {itemName}
+                    </Text>
+
+                    {itemCategory ? (
+                      <Text style={styles.itemCategory}>
+                        {itemCategory}
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  <Check size={18} color="#C17D55" />
+                </View>
+              );
+            })
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Shirt size={35} color="#C17D55" />
+
+              <Text style={styles.emptyTitle}>
+                ยังไม่มีเสื้อผ้าที่แนะนำ
               </Text>
 
-              <Check
-                size={18}
-                color="#C17D55"
-              />
+              <Text style={styles.emptyText}>
+                กรุณาเพิ่มเสื้อผ้าพร้อมรูปภาพในตู้เสื้อผ้าก่อน
+              </Text>
             </View>
-          ))}
+          )}
         </View>
       </View>
 
-      {/* Back Home Button */}
       <TouchableOpacity
         style={styles.homeButton}
         onPress={() => navigation.goBack()}
@@ -124,10 +188,6 @@ export default function ResultScreen({ route, navigation }) {
   );
 }
 
-// ------------------------------
-// Styles
-// ------------------------------
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -140,7 +200,6 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
 
-  // Header
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -176,7 +235,6 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
-  // Main Card
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
@@ -241,7 +299,6 @@ const styles = StyleSheet.create({
     marginVertical: 22,
   },
 
-  // Recommended Items
   itemHeading: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -269,36 +326,71 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F8F4EF",
     borderRadius: 15,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
+    padding: 12,
     borderWidth: 1,
     borderColor: "#EFE2D7",
+    minHeight: 105,
   },
 
-  itemNumber: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
+  itemImage: {
+    width: 75,
+    height: 85,
+    borderRadius: 12,
+    backgroundColor: "#F1E4D9",
+    marginRight: 12,
+  },
+
+  itemImagePlaceholder: {
+    width: 75,
+    height: 85,
+    borderRadius: 12,
     backgroundColor: "#F1E4D9",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
   },
 
-  itemNumberText: {
-    color: "#C17D55",
-    fontSize: 13,
-    fontWeight: "800",
+  itemDetails: {
+    flex: 1,
+    justifyContent: "center",
   },
 
   chipText: {
     color: "#5B4C42",
     fontSize: 14,
     fontWeight: "600",
-    flex: 1,
   },
 
-  // Back Button
+  itemCategory: {
+    color: "#998A80",
+    fontSize: 12,
+    marginTop: 5,
+  },
+
+  emptyContainer: {
+    backgroundColor: "#F8F4EF",
+    borderRadius: 15,
+    padding: 25,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#EFE2D7",
+  },
+
+  emptyTitle: {
+    color: "#5B4C42",
+    fontSize: 15,
+    fontWeight: "700",
+    marginTop: 12,
+  },
+
+  emptyText: {
+    color: "#998A80",
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 20,
+    marginTop: 6,
+  },
+
   homeButton: {
     marginTop: 20,
     backgroundColor: "#C17D55",

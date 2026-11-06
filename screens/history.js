@@ -1,3 +1,4 @@
+
 import React, { useContext } from 'react';
 import {
   View,
@@ -8,17 +9,24 @@ import {
   Alert,
 } from 'react-native';
 
-import { CalendarDays, Clock3, Sparkles, Trash2 } from 'lucide-react-native';
+import {
+  CalendarDays,
+  Clock3,
+  Sparkles,
+  Trash2,
+} from 'lucide-react-native';
 
 import { HistoryContext } from '../context/HistoryContext';
 
 export default function HistoryScreen({ navigation }) {
-  const { history, deleteHistoryEntry, clearHistory } = useContext(HistoryContext);
+  const { history, deleteHistoryEntry, clearHistory } =
+    useContext(HistoryContext);
 
   const formatDate = (value) => {
     if (!value) return '—';
 
     const date = new Date(value);
+
     return new Intl.DateTimeFormat('th-TH', {
       day: '2-digit',
       month: 'short',
@@ -28,42 +36,79 @@ export default function HistoryScreen({ navigation }) {
     }).format(date);
   };
 
+  const handleClearHistory = () => {
+    Alert.alert(
+      'ลบประวัติทั้งหมด',
+      'คุณต้องการลบประวัติทั้งหมดใช่ไหม?',
+      [
+        { text: 'ยกเลิก', style: 'cancel' },
+        {
+          text: 'ลบทั้งหมด',
+          style: 'destructive',
+          onPress: clearHistory,
+        },
+      ]
+    );
+  };
+
+  const handleDeleteItem = (id) => {
+    Alert.alert(
+      'ลบประวัติ',
+      'คุณต้องการลบรายการนี้ใช่ไหม?',
+      [
+        { text: 'ยกเลิก', style: 'cancel' },
+        {
+          text: 'ลบ',
+          style: 'destructive',
+          onPress: () => deleteHistoryEntry(id),
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>History</Text>
-          <Text style={styles.subtitle}>ประวัติการแนะนำชุดของคุณ</Text>
+      {/* Header */}
+      <View style={styles.logoHeader}>
+        <View style={styles.logoIcon}>
+          <Clock3 size={27} color="#C17D55" />
         </View>
+
+        <Text style={styles.appName}>History</Text>
       </View>
 
       {history.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>
-            <Sparkles size={34} color="#C17D55" />
+            <Sparkles size={36} color="#C17D55" />
           </View>
 
           <Text style={styles.emptyTitle}>ยังไม่มีประวัติ</Text>
+
           <Text style={styles.emptyText}>
-            ไปที่หน้าหลักแล้วลองแนะนำชุดเพื่อสร้างประวัติของคุณ
+            ไปที่หน้าหลักแล้วลองแนะนำชุด
+            เพื่อสร้างประวัติของคุณ
           </Text>
         </View>
       ) : (
         <>
-          <TouchableOpacity
-            style={styles.clearButton}
-            onPress={() => {
-              Alert.alert('ลบประวัติทั้งหมด', 'คุณต้องการลบประวัติทั้งหมดใช่ไหม', [
-                { text: 'ยกเลิก', style: 'cancel' },
-                { text: 'ลบทั้งหมด', style: 'destructive', onPress: clearHistory },
-              ]);
-            }}
-            activeOpacity={0.8}
-          >
-            <Trash2 size={16} color="#FFFFFF" />
-            <Text style={styles.clearButtonText}>ลบทั้งหมด</Text>
-          </TouchableOpacity>
+          {/* Clear History */}
+          <View style={styles.actionRow}>
+            <Text style={styles.historyCount}>
+              {history.length} รายการ
+            </Text>
 
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={handleClearHistory}
+              activeOpacity={0.85}
+            >
+              <Trash2 size={15} color="#FFFFFF" />
+              <Text style={styles.clearButtonText}>ลบทั้งหมด</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* History List */}
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
@@ -71,52 +116,61 @@ export default function HistoryScreen({ navigation }) {
             {history.map((item) => (
               <View key={item.id} style={styles.card}>
                 <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => navigation.navigate('HistoryDetail', { item })}
+                  activeOpacity={0.85}
+                  onPress={() =>
+                    navigation.navigate('HistoryDetail', { item })
+                  }
                 >
                   <View style={styles.cardTop}>
                     <View style={styles.badge}>
-                      <Sparkles size={14} color="#C17D55" />
+                      <Sparkles size={13} color="#A96F50" />
                       <Text style={styles.badgeText}>AI</Text>
                     </View>
 
-                    <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
+                    <Text style={styles.dateText}>
+                      {formatDate(item.createdAt)}
+                    </Text>
                   </View>
 
-                  <Text style={styles.itemTitle}>{item.title}</Text>
+                  <Text style={styles.itemTitle}>
+                    {item.title}
+                  </Text>
 
-                  <Text style={styles.itemPreview} numberOfLines={2}>
+                  <Text
+                    style={styles.itemPreview}
+                    numberOfLines={2}
+                  >
                     {item.text}
                   </Text>
 
+                  <View style={styles.cardDivider} />
+
                   <View style={styles.metaRow}>
                     <View style={styles.metaItem}>
-                      <CalendarDays size={14} color="#8B8078" />
-                      <Text style={styles.metaText}>วันที่</Text>
+                      <CalendarDays
+                        size={14}
+                        color="#A58E7D"
+                      />
+                      <Text style={styles.metaText}>วันที่บันทึก</Text>
                     </View>
 
                     <View style={styles.metaItem}>
-                      <Clock3 size={14} color="#8B8078" />
-                      <Text style={styles.metaText}>เวลา</Text>
+                      <Clock3
+                        size={14}
+                        color="#A58E7D"
+                      />
+                      <Text style={styles.metaText}>ดูรายละเอียด</Text>
                     </View>
                   </View>
                 </TouchableOpacity>
 
+                {/* Delete Button */}
                 <TouchableOpacity
                   style={styles.deleteButton}
-                  onPress={() => {
-                    Alert.alert('ลบประวัติ', 'คุณต้องการลบรายการนี้ใช่ไหม', [
-                      { text: 'ยกเลิก', style: 'cancel' },
-                      {
-                        text: 'ลบ',
-                        style: 'destructive',
-                        onPress: () => deleteHistoryEntry(item.id),
-                      },
-                    ]);
-                  }}
-                  activeOpacity={0.8}
+                  onPress={() => handleDeleteItem(item.id)}
+                  activeOpacity={0.85}
                 >
-                  <Trash2 size={15} color="#FFFFFF" />
+                  <Trash2 size={16} color="#B65F58" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -130,141 +184,202 @@ export default function HistoryScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F1EA',
-    paddingTop: 15,
+    backgroundColor: '#F7F3EE',
+    paddingTop: 55,
   },
-  header: {
-    paddingHorizontal: 22,
-    marginTop: 45,
-    marginBottom: 18,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#292522',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#998A80',
+
+  // Header
+  logoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 22,
+    marginBottom: 25,
     marginTop: 5,
   },
-  listContent: {
-    paddingHorizontal: 18,
-    paddingBottom: 120,
-    gap: 14,
+
+  logoIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 15,
+    backgroundColor: '#F1E5DA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  card: {
-    position: 'relative',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#EFE2D7',
-    padding: 18,
-    paddingRight: 52,
+
+  appName: {
+    color: "#C17D55",
+    fontSize: 27,
+    fontWeight: "800",
   },
-  cardTop: {
+
+  // Action Row
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    paddingHorizontal: 22,
+    marginBottom: 15,
   },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8EEE6',
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    gap: 5,
-  },
-  badgeText: {
-    color: '#C17D55',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  dateText: {
-    color: '#8B8078',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  itemTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#292522',
-    marginBottom: 8,
-  },
-  itemPreview: {
-    color: '#5E5551',
+
+  historyCount: {
     fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 14,
+    fontWeight: '700',
+    color: '#9B8879',
   },
-  metaRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  metaText: {
-    color: '#8B8078',
-    fontSize: 11,
-    fontWeight: '600',
-  },
+
   clearButton: {
-    alignSelf: 'flex-end',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#C17D55',
-    borderRadius: 999,
+    backgroundColor: '#A96F50',
+    borderRadius: 13,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    marginRight: 18,
-    marginBottom: 14,
-    gap: 6,
+    gap: 7,
+    elevation: 2,
+    shadowColor: '#8C5B40',
+    shadowOpacity: 0.12,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
   },
+
   clearButtonText: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
   },
+
+  // History List
+  listContent: {
+    paddingHorizontal: 18,
+    paddingBottom: 120,
+    gap: 14,
+  },
+
+  card: {
+    position: 'relative',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#EEE4DA',
+    padding: 18,
+    paddingRight: 52,
+    elevation: 2,
+    shadowColor: '#8C6B55',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+  },
+
+  cardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 13,
+  },
+
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7EEE7',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 5,
+  },
+
+  badgeText: {
+    color: '#A96F50',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+
+  dateText: {
+    color: '#A3958A',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+
+  itemTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#302720',
+    marginBottom: 8,
+  },
+
+  itemPreview: {
+    color: '#76685E',
+    fontSize: 13,
+    lineHeight: 21,
+    marginBottom: 15,
+  },
+
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#F0EAE4',
+    marginBottom: 13,
+  },
+
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+
+  metaText: {
+    color: '#A3958A',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+
+  // Delete Button
   deleteButton: {
     position: 'absolute',
     right: 12,
     top: 14,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#D66A6A',
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    backgroundColor: '#FBEFEE',
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // Empty State
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 28,
+    paddingHorizontal: 30,
+    paddingBottom: 80,
   },
+
   emptyIcon: {
-    width: 88,
-    height: 88,
+    width: 90,
+    height: 90,
     borderRadius: 28,
-    backgroundColor: '#F2E5DA',
+    backgroundColor: '#F1E5DA',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 18,
+    marginBottom: 20,
   },
+
   emptyTitle: {
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: '800',
-    color: '#292522',
+    color: '#302720',
   },
+
   emptyText: {
-    fontSize: 14,
-    color: '#8A7F78',
+    fontSize: 13,
+    color: '#9B8C80',
     textAlign: 'center',
     marginTop: 10,
     lineHeight: 22,

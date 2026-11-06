@@ -8,12 +8,34 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 
-import { Sparkles, Shirt, ArrowRight } from "lucide-react-native";
+import { Sparkles, Home, ArrowRight } from "lucide-react-native";
 
 import { HistoryContext } from "../context/HistoryContext";
 import { PhotoContext } from "../context/PhotoContext";
+
+// ดึง URI รูปจากข้อมูลเสื้อผ้า รองรับชื่อ field หลายแบบ
+const getPhotoUri = (item) => {
+  if (!item || typeof item !== "object") return null;
+
+  const value =
+    item.uri ||
+    item.imageUri ||
+    item.image ||
+    item.url ||
+    null;
+
+  if (typeof value === "string") return value;
+
+  // รองรับกรณีข้อมูลรูปเป็น object
+  if (value && typeof value.uri === "string") {
+    return value.uri;
+  }
+
+  return null;
+};
 
 export default function HomeScreen({ navigation }) {
   const { saveHistoryEntry } = useContext(HistoryContext);
@@ -21,30 +43,42 @@ export default function HomeScreen({ navigation }) {
   const [destination, setDestination] = useState("");
 
   const recommendation = useMemo(() => {
-    if (!destination.trim()) {
-      return null;
-    }
+    if (!destination.trim()) return null;
 
-    const wardrobeItems = (photos || []).filter((item) => item && item.name);
+    // เตรียมข้อมูลเสื้อผ้าจากตู้
+    const wardrobeItems = (photos || [])
+      .filter((item) => item && item.name)
+      .map((item) => ({
+        ...item,
+        uri: getPhotoUri(item),
+      }))
+      .filter((item) => item.uri);
+
+    // เลือกเสื้อผ้าตามหมวดหมู่
     const getWardrobeSuggestions = (categories) => {
       const found = [];
 
       categories.forEach((category) => {
-        const match = wardrobeItems.find((item) => item.category === category);
-        if (match && !found.some((entry) => entry.id === match.id)) {
+        const match = wardrobeItems.find(
+          (item) =>
+            String(item.category || "").trim().toLowerCase() ===
+            category.trim().toLowerCase()
+        );
+
+        if (
+          match &&
+          !found.some((entry) => String(entry.id) === String(match.id))
+        ) {
           found.push(match);
         }
       });
 
+      // หากไม่พบหมวดหมู่ที่ตรงกัน ให้ใช้เสื้อผ้าที่มีรูปในตู้แทน
       if (found.length > 0) {
-        return found.slice(0, 3).map((item) => item.name);
+        return found.slice(0, 3);
       }
 
-      if (wardrobeItems.length > 0) {
-        return wardrobeItems.slice(0, 3).map((item) => item.name);
-      }
-
-      return ["เสื้อที่คุณมีอยู่", "กางเกงที่คุณมีอยู่", "รองเท้าที่คุณมีอยู่"];
+      return wardrobeItems.slice(0, 3);
     };
 
     const lowerText = destination.trim().toLowerCase();
@@ -95,12 +129,41 @@ export default function HomeScreen({ navigation }) {
   }, [destination, photos]);
 
   const handleSuggest = async () => {
-    if (!recommendation) {
+    if (!recommendation) return;
+
+    if (!recommendation.items || recommendation.items.length === 0) {
+      Alert.alert(
+        "ยังไม่มีรูปภาพเสื้อผ้า",
+        "กรุณาเพิ่มเสื้อผ้าพร้อมรูปภาพในตู้เสื้อผ้าก่อน"
+      );
       return;
     }
 
-    await saveHistoryEntry(recommendation);
-    navigation.navigate("Result", { recommendation });
+    // ส่งข้อมูลเสื้อผ้าพร้อม URI ไปยังหน้า Result
+    const resultData = {
+      ...recommendation,
+      items: recommendation.items.map((item) => ({
+        id: String(item.id || Date.now()),
+        name: item.name || "เสื้อผ้า",
+        category: item.category || "",
+        uri: getPhotoUri(item),
+      })),
+    };
+
+    try {
+      await saveHistoryEntry(resultData);
+
+      navigation.navigate("Result", {
+        recommendation: resultData,
+      });
+    } catch (error) {
+      console.log("Recommendation error:", error);
+
+      Alert.alert(
+        "เกิดข้อผิดพลาด",
+        "ไม่สามารถบันทึกคำแนะนำได้ กรุณาลองอีกครั้ง"
+      );
+    }
   };
 
   return (
@@ -109,11 +172,10 @@ export default function HomeScreen({ navigation }) {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
       <View style={styles.appBar}>
         <View style={styles.logoRow}>
           <View style={styles.logoIcon}>
-            <Shirt size={27} color="#C17D55" />
+            <Home size={27} color="#C17D55" />
           </View>
 
           <Text style={styles.appName}>OutfitReady</Text>
@@ -124,19 +186,13 @@ export default function HomeScreen({ navigation }) {
         </Text>
       </View>
 
-      {/* Welcome Card */}
       <View style={styles.headerCard}>
         <View style={styles.aiBadge}>
           <Sparkles size={15} color="#C17D55" />
-
-          <Text style={styles.aiBadgeText}>
-            AI STYLIST
-          </Text>
+          <Text style={styles.aiBadgeText}>AI STYLIST</Text>
         </View>
 
-        <Text style={styles.title}>
-          วันนี้คุณจะไปไหน?
-        </Text>
+        <Text style={styles.title}>วันนี้คุณจะไปไหน?</Text>
 
         <Text style={styles.subtitle}>
           บอกแพลนของคุณให้เรารู้ แล้วให้ OutfitReady
@@ -146,16 +202,13 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.decorCircle} />
       </View>
 
-      {/* Input Card */}
       <View style={styles.formCard}>
         <View style={styles.cardHeading}>
           <View style={styles.headingIcon}>
             <Sparkles size={19} color="#C17D55" />
           </View>
 
-          <Text style={styles.label}>
-            อธิบายวันของคุณ
-          </Text>
+          <Text style={styles.label}>อธิบายวันของคุณ</Text>
         </View>
 
         <Text style={styles.inputDescription}>
@@ -195,14 +248,9 @@ export default function HomeScreen({ navigation }) {
           <ArrowRight size={19} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
-
     </ScrollView>
   );
 }
-
-// ------------------------------
-// Styles
-// ------------------------------
 
 const styles = StyleSheet.create({
   container: {
@@ -216,7 +264,6 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
 
-  // Header
   appBar: {
     marginTop: 45,
     marginBottom: 24,
@@ -249,7 +296,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 
-  // Welcome Card
   headerCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
@@ -303,7 +349,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 
-  // Form Card
   formCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 22,
@@ -382,5 +427,4 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
   },
-
 });

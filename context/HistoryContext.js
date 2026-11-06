@@ -1,4 +1,12 @@
-import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const HistoryContext = createContext(null);
@@ -13,8 +21,10 @@ export function HistoryProvider({ children }) {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
+
       setHistory(Array.isArray(parsed) ? parsed : []);
-    } catch {
+    } catch (error) {
+      console.log('Load history failed:', error);
       setHistory([]);
     } finally {
       setLoading(false);
@@ -28,10 +38,13 @@ export function HistoryProvider({ children }) {
       try {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         const parsed = raw ? JSON.parse(raw) : [];
+
         if (active) {
           setHistory(Array.isArray(parsed) ? parsed : []);
         }
-      } catch {
+      } catch (error) {
+        console.log('Load history failed:', error);
+
         if (active) {
           setHistory([]);
         }
@@ -54,7 +67,10 @@ export function HistoryProvider({ children }) {
 
     const persistHistory = async () => {
       try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+        await AsyncStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(history)
+        );
       } catch (error) {
         console.log('Save history failed:', error);
       }
@@ -66,10 +82,34 @@ export function HistoryProvider({ children }) {
   const saveHistoryEntry = useCallback(async (recommendation) => {
     const normalizedItems = Array.isArray(recommendation?.items)
       ? recommendation.items.map((item) => {
-          if (typeof item === 'string') return item;
-          if (item && typeof item === 'object') {
-            return item.name || item.title || 'ชุดที่แนะนำ';
+          // รองรับประวัติรูปแบบเก่า
+          if (typeof item === 'string') {
+            return item;
           }
+
+          if (item && typeof item === 'object') {
+            const imageValue =
+              item.uri ||
+              item.imageUri ||
+              item.image ||
+              item.url ||
+              null;
+
+            const uri =
+              typeof imageValue === 'string'
+                ? imageValue
+                : imageValue?.uri || null;
+
+            // เก็บข้อมูลรูปภาพไว้ด้วย ไม่ตัดเหลือแค่ชื่อ
+            return {
+              id: String(item.id || Date.now()),
+              name: item.name || item.title || 'ชุดที่แนะนำ',
+              title: item.title || item.name || 'ชุดที่แนะนำ',
+              category: item.category || '',
+              uri,
+            };
+          }
+
           return 'ชุดที่แนะนำ';
         })
       : [];
@@ -84,11 +124,14 @@ export function HistoryProvider({ children }) {
     };
 
     setHistory((prev) => [entry, ...prev].slice(0, 20));
+
     return entry;
   }, []);
 
   const deleteHistoryEntry = useCallback((id) => {
-    setHistory((prev) => prev.filter((item) => item.id !== id));
+    setHistory((prev) =>
+      prev.filter((item) => item.id !== id)
+    );
   }, []);
 
   const clearHistory = useCallback(() => {
@@ -104,8 +147,19 @@ export function HistoryProvider({ children }) {
       clearHistory,
       refreshHistory: loadHistory,
     }),
-    [history, loading, loadHistory, saveHistoryEntry, deleteHistoryEntry, clearHistory]
+    [
+      history,
+      loading,
+      loadHistory,
+      saveHistoryEntry,
+      deleteHistoryEntry,
+      clearHistory,
+    ]
   );
 
-  return <HistoryContext.Provider value={value}>{children}</HistoryContext.Provider>;
+  return (
+    <HistoryContext.Provider value={value}>
+      {children}
+    </HistoryContext.Provider>
+  );
 }

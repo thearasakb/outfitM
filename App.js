@@ -1,5 +1,6 @@
 
 import React, { useContext } from 'react';
+
 import {
   StatusBar,
   StyleSheet,
@@ -14,11 +15,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
-  Bookmark,
+  Clock3,
   Home,
   Shirt,
   User,
-  LogOut,
 } from 'lucide-react-native';
 
 import { AuthContext, AuthProvider } from './context/AuthContext';
@@ -34,11 +34,15 @@ import UploadClothesScreen from './screens/uploadclothes';
 import UpdateClothesScreen from './screens/update';
 import HistoryScreen from './screens/history';
 import SHistoryScreen from './screens/shistory';
+import ProfileScreen from './screens/profile';
+import UpdateAccScreen from './screens/updateacc';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
 const WardrobeStackNav = createNativeStackNavigator();
 const SavedStackNav = createNativeStackNavigator();
+const ProfileStackNav = createNativeStackNavigator();
 
 // ==============================
 // HOME STACK
@@ -124,49 +128,28 @@ function SavedStack() {
 }
 
 // ==============================
-// PROFILE SCREEN
+// PROFILE STACK
 // ==============================
-function ProfileScreen() {
-  const { logout, user } = useContext(AuthContext);
-
+function ProfileStack() {
   return (
-    <View style={styles.profileScreen}>
-      <View style={styles.profileHeader}>
-        <View style={styles.avatar}>
-          <User size={38} color="#C58A68" />
-        </View>
+    <ProfileStackNav.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+        animationDuration: 300,
+        gestureEnabled: true,
+      }}
+    >
+      <ProfileStackNav.Screen
+        name="ProfileMain"
+        component={ProfileScreen}
+      />
 
-        <Text style={styles.profileTitle}>
-          My Profile
-        </Text>
-
-        <Text style={styles.profileSubtitle}>
-          จัดการบัญชี OutfitReady ของคุณ
-        </Text>
-      </View>
-
-      <View style={styles.profileCard}>
-        <Text style={styles.infoLabel}>
-          ACCOUNT
-        </Text>
-
-        <Text style={styles.userText}>
-          {user?.email || user?.name || 'Guest'}
-        </Text>
-      </View>
-
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={logout}
-        activeOpacity={0.8}
-      >
-        <LogOut size={19} color="#FFFFFF" />
-
-        <Text style={styles.logoutText}>
-          ออกจากระบบ
-        </Text>
-      </TouchableOpacity>
-    </View>
+      <ProfileStackNav.Screen
+        name="UpdateAcc"
+        component={UpdateAccScreen}
+      />
+    </ProfileStackNav.Navigator>
   );
 }
 
@@ -177,7 +160,7 @@ function AppTabs() {
   const icons = {
     Home,
     Wardrobe: Shirt,
-    Saved: Bookmark,
+    Saved: Clock3,
     Profile: User,
   };
 
@@ -189,7 +172,6 @@ function AppTabs() {
         return {
           headerShown: false,
 
-          // Bottom Tab Animation
           animation: 'shift',
 
           tabBarShowLabel: true,
@@ -205,6 +187,13 @@ function AppTabs() {
           tabBarLabelStyle: styles.tabLabel,
 
           tabBarActiveBackgroundColor: '#F8EEE6',
+
+          tabBarHideOnKeyboard: true,
+
+          sceneStyle: {
+            backgroundColor: '#F5F1EA',
+            
+          },
 
           tabBarIcon: ({ color, focused }) => (
             <View
@@ -243,7 +232,7 @@ function AppTabs() {
 
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStack}
         options={{ title: 'Profile' }}
       />
     </Tab.Navigator>
@@ -380,114 +369,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  profileScreen: {
-    flex: 1,
-    backgroundColor: '#F8F5F1',
-    paddingHorizontal: 24,
-    paddingTop: 70,
-  },
-
-  profileHeader: {
-    alignItems: 'center',
-    marginBottom: 35,
-  },
-
-  avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 30,
-    backgroundColor: '#F2E5DA',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 18,
-  },
-
-  profileTitle: {
-    fontSize: 25,
-    fontWeight: '800',
-    color: '#292522',
-  },
-
-  profileSubtitle: {
-    fontSize: 13,
-    color: '#99918A',
-    marginTop: 7,
-  },
-
-  profileCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 22,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#F0E8E1',
-  },
-
-  infoLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#C17D55',
-    letterSpacing: 1.2,
-    marginBottom: 10,
-  },
-
-  userText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#39332E',
-  },
-
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#292522',
-    borderRadius: 16,
-    paddingVertical: 16,
-    marginTop: 25,
-    gap: 10,
-  },
-
-  logoutText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-
+  // Bottom Tab แบบลอย มีช่องว่างรอบด้าน
   tabBar: {
     position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: 12,
-
+    left: 18,
+    right: 18,
+    bottom: 20,
     height: 76,
-
     backgroundColor: '#FFFFFF',
-
-    borderRadius: 25,
-
+    borderRadius: 50,
     borderTopWidth: 0,
     borderWidth: 1,
     borderColor: '#F0E8E1',
-
     paddingTop: 7,
     paddingBottom: 7,
     paddingHorizontal: 7,
-
     elevation: 8,
-
     shadowColor: '#8C7666',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 12,
   },
 
   tabItem: {
-    borderRadius: 18,
-    marginHorizontal: 3,
-    marginVertical: 4,
+    borderRadius:30,
+    marginHorizontal: 1,
+    marginVertical: 0,
     overflow: 'hidden',
   },
 
