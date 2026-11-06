@@ -9,8 +9,11 @@ import {
   ScrollView,
   Image,
   Alert,
+  Modal,
 } from 'react-native';
+
 import * as ImagePicker from 'expo-image-picker';
+
 import {
   Check,
   Trash2,
@@ -18,6 +21,7 @@ import {
   Image as ImageIcon,
   ArrowLeft,
   ChevronDown,
+  X,
 } from 'lucide-react-native';
 
 import { PhotoContext } from '../context/PhotoContext';
@@ -42,6 +46,7 @@ export default function UpdateClothesScreen({ navigation, route }) {
     item?.image || item?.uri || null
   );
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
 
   const canDelete = useMemo(() => !!item?.id, [item]);
 
@@ -132,174 +137,234 @@ export default function UpdateClothesScreen({ navigation, route }) {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.8}
-        >
-          <ArrowLeft size={21} color="#49382E" />
-        </TouchableOpacity>
-
-        <View>
-          <Text style={styles.title}>แก้ไขชุด</Text>
-          <Text style={styles.subtitle}>จัดการรายละเอียดเสื้อผ้าของคุณ</Text>
-        </View>
-      </View>
-
-      {/* Main Card */}
-      <View style={styles.card}>
-        {/* รูปภาพ */}
-        <Text style={styles.label}>รูปภาพ</Text>
-
-        <View style={styles.imageActionRow}>
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View style={styles.header}>
           <TouchableOpacity
-            style={styles.photoButton}
-            onPress={openCamera}
-            activeOpacity={0.85}
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.8}
           >
-            <Camera size={19} color="#FFFFFF" />
-            <Text style={styles.photoButtonText}>ถ่ายรูป</Text>
+            <ArrowLeft size={21} color="#49382E" />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.photoButtonSecondary}
-            onPress={pickFromLibrary}
-            activeOpacity={0.85}
-          >
-            <ImageIcon size={19} color="#A66C4D" />
-            <Text style={styles.photoButtonTextSecondary}>เลือกรูป</Text>
-          </TouchableOpacity>
-        </View>
-
-        {selectedImage ? (
-          <Image
-            source={{ uri: selectedImage }}
-            style={styles.previewImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.previewPlaceholder}>
-            <View style={styles.placeholderIcon}>
-              <ImageIcon size={30} color="#C4A58E" />
-            </View>
-            <Text style={styles.previewPlaceholderText}>
-              ยังไม่มีรูปภาพ
-            </Text>
-            <Text style={styles.placeholderHint}>
-              ถ่ายรูปหรือเลือกรูปจากคลังภาพ
+          <View>
+            <Text style={styles.title}>แก้ไขชุด</Text>
+            <Text style={styles.subtitle}>
+              จัดการรายละเอียดเสื้อผ้าของคุณ
             </Text>
           </View>
-        )}
+        </View>
 
-        {/* ชื่อชุด */}
-        <Text style={styles.label}>ชื่อชุด</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="เช่น White Shirt"
-          placeholderTextColor="#B6A79C"
-        />
+        {/* Main Card */}
+        <View style={styles.card}>
+          {/* รูปภาพ */}
+          <Text style={styles.label}>รูปภาพ</Text>
 
-        {/* หมวดหมู่ */}
-        <Text style={styles.label}>หมวดหมู่</Text>
+          <View style={styles.imageActionRow}>
+            <TouchableOpacity
+              style={styles.photoButton}
+              onPress={openCamera}
+              activeOpacity={0.85}
+            >
+              <Camera size={19} color="#FFFFFF" />
+              <Text style={styles.photoButtonText}>ถ่ายรูป</Text>
+            </TouchableOpacity>
 
-        <View style={styles.dropdownWrap}>
+            <TouchableOpacity
+              style={styles.photoButtonSecondary}
+              onPress={pickFromLibrary}
+              activeOpacity={0.85}
+            >
+              <ImageIcon size={19} color="#A66C4D" />
+              <Text style={styles.photoButtonTextSecondary}>
+                เลือกรูป
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* รูปตัวอย่าง กดเพื่อเปิด Popup */}
+          {selectedImage ? (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => setImageModalVisible(true)}
+              style={styles.previewImageContainer}
+            >
+              <Image
+                source={{ uri: selectedImage }}
+                style={styles.previewImage}
+                resizeMode="cover"
+              />
+
+              <View style={styles.zoomHint}>
+                <Text style={styles.zoomHintText}>
+                  แตะเพื่อดูรูปใหญ่
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.previewPlaceholder}>
+              <View style={styles.placeholderIcon}>
+                <ImageIcon size={30} color="#C4A58E" />
+              </View>
+              <Text style={styles.previewPlaceholderText}>
+                ยังไม่มีรูปภาพ
+              </Text>
+              <Text style={styles.placeholderHint}>
+                ถ่ายรูปหรือเลือกรูปจากคลังภาพ
+              </Text>
+            </View>
+          )}
+
+          {/* ชื่อชุด */}
+          <Text style={styles.label}>ชื่อชุด</Text>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder="เช่น White Shirt"
+            placeholderTextColor="#B6A79C"
+          />
+
+          {/* หมวดหมู่ */}
+          <Text style={styles.label}>หมวดหมู่</Text>
+
+          <View style={styles.dropdownWrap}>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setCategoryOpen((prev) => !prev)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.dropdownValue}>{category}</Text>
+              <ChevronDown
+                size={20}
+                color="#A66C4D"
+                style={{
+                  transform: [
+                    { rotate: categoryOpen ? '180deg' : '0deg' },
+                  ],
+                }}
+              />
+            </TouchableOpacity>
+
+            {categoryOpen && (
+              <View style={styles.dropdownMenu}>
+                {categoryOptions.map((itemName) => (
+                  <TouchableOpacity
+                    key={itemName}
+                    style={[
+                      styles.dropdownOption,
+                      category === itemName &&
+                        styles.dropdownOptionActive,
+                    ]}
+                    onPress={() => {
+                      setCategory(itemName);
+                      setCategoryOpen(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownOptionText,
+                        category === itemName &&
+                          styles.dropdownOptionTextActive,
+                      ]}
+                    >
+                      {itemName}
+                    </Text>
+
+                    {category === itemName && (
+                      <Check size={17} color="#FFFFFF" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* บันทึกเพิ่มเติม */}
+          <Text style={styles.label}>บันทึกเพิ่มเติม</Text>
+          <TextInput
+            style={styles.textArea}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="เช่น สีขาว, ผ้าฝ้าย, ใช้ได้ทั้งวัน"
+            placeholderTextColor="#B6A79C"
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+
+          {/* ปุ่มบันทึก */}
           <TouchableOpacity
-            style={styles.dropdownButton}
-            onPress={() => setCategoryOpen((prev) => !prev)}
+            style={styles.saveButton}
+            onPress={handleSave}
             activeOpacity={0.85}
           >
-            <Text style={styles.dropdownValue}>{category}</Text>
-            <ChevronDown
-              size={20}
-              color="#A66C4D"
-              style={{
-                transform: [{ rotate: categoryOpen ? '180deg' : '0deg' }],
-              }}
-            />
+            <Check size={20} color="#FFFFFF" />
+            <Text style={styles.saveButtonText}>
+              บันทึกการเปลี่ยนแปลง
+            </Text>
           </TouchableOpacity>
 
-          {categoryOpen && (
-            <View style={styles.dropdownMenu}>
-              {categoryOptions.map((itemName) => (
-                <TouchableOpacity
-                  key={itemName}
-                  style={[
-                    styles.dropdownOption,
-                    category === itemName && styles.dropdownOptionActive,
-                  ]}
-                  onPress={() => {
-                    setCategory(itemName);
-                    setCategoryOpen(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.dropdownOptionText,
-                      category === itemName &&
-                        styles.dropdownOptionTextActive,
-                    ]}
-                  >
-                    {itemName}
-                  </Text>
-
-                  {category === itemName && (
-                    <Check size={17} color="#FFFFFF" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
+          {/* ปุ่มลบ */}
+          {canDelete && (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={handleDelete}
+              activeOpacity={0.85}
+            >
+              <Trash2 size={18} color="#A84F4F" />
+              <Text style={styles.deleteButtonText}>
+                ลบรายการนี้
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
 
-        {/* บันทึกเพิ่มเติม */}
-        <Text style={styles.label}>บันทึกเพิ่มเติม</Text>
-        <TextInput
-          style={styles.textArea}
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="เช่น สีขาว, ผ้าฝ้าย, ใช้ได้ทั้งวัน"
-          placeholderTextColor="#B6A79C"
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-        />
+        <View style={styles.bottomSpace} />
+      </ScrollView>
 
-        {/* ปุ่มบันทึก */}
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-          activeOpacity={0.85}
-        >
-          <Check size={20} color="#FFFFFF" />
-          <Text style={styles.saveButtonText}>บันทึกการเปลี่ยนแปลง</Text>
-        </TouchableOpacity>
-
-        {/* ปุ่มลบ */}
-        {canDelete && (
+      {/* Popup แสดงรูปภาพ */}
+      <Modal
+        visible={imageModalVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View style={styles.popupOverlay}>
+          {/* แตะพื้นที่ด้านนอกเพื่อปิด */}
           <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDelete}
-            activeOpacity={0.85}
-          >
-            <Trash2 size={18} color="#A84F4F" />
-            <Text style={styles.deleteButtonText}>ลบรายการนี้</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+            style={StyleSheet.absoluteFillObject}
+            activeOpacity={1}
+            onPress={() => setImageModalVisible(false)}
+          />
 
-      {/* พื้นที่ด้านล่าง ป้องกันปุ่มชนแถบเมนู */}
-      <View style={styles.bottomSpace} />
-    </ScrollView>
+          <View style={styles.popupContainer}>
+            <TouchableOpacity
+              style={styles.popupClose}
+              onPress={() => setImageModalVisible(false)}
+              activeOpacity={0.8}
+            >
+              <X size={22} color="#49382E" />
+            </TouchableOpacity>
+
+            
+            <Image
+              source={{ uri: selectedImage }}
+              style={styles.popupImage}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -318,12 +383,12 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginBottom: 24,
-  paddingTop: 8,
-  marginTop: 45,
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingTop: 8,
+    marginTop: 45,
+  },
 
   backButton: {
     width: 46,
@@ -338,10 +403,9 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: "#C17D55",
+    color: '#C17D55',
     fontSize: 27,
-    fontWeight: "800",
-   
+    fontWeight: '800',
   },
 
   subtitle: {
@@ -416,6 +480,36 @@ const styles = StyleSheet.create({
   },
 
   // Preview
+  previewImageContainer: {
+    width: '100%',
+    height: 210,
+    borderRadius: 19,
+    marginBottom: 8,
+    overflow: 'hidden',
+    backgroundColor: '#F1E5DB',
+  },
+
+  previewImage: {
+    width: '100%',
+    height: '100%',
+  },
+
+  zoomHint: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+
+  zoomHintText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+
   previewPlaceholder: {
     height: 200,
     borderRadius: 19,
@@ -450,12 +544,57 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 
-  previewImage: {
+  // Popup
+  popupOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 25,
+  },
+
+  popupContainer: {
     width: '100%',
-    height: 210,
+    maxWidth: 400,
+    height: 430,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 18,
+    paddingTop: 55,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+  },
+
+  popupClose: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 2,
+    width: 38,
+    height: 38,
     borderRadius: 19,
-    marginBottom: 8,
-    backgroundColor: '#F1E5DB',
+    backgroundColor: '#F5EBE3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  popupTitle: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    color: '#49382E',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+
+  popupImage: {
+    width: '100%',
+    height: '100%',
   },
 
   // Input
