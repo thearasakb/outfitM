@@ -12,6 +12,7 @@ import {
 import {
   CalendarDays,
   Clock3,
+  History,
   Sparkles,
   Trash2,
 } from 'lucide-react-native';
@@ -71,7 +72,7 @@ export default function HistoryScreen({ navigation }) {
       {/* Header */}
       <View style={styles.logoHeader}>
         <View style={styles.logoIcon}>
-          <Clock3 size={27} color="#C17D55" />
+          <History size={27} color="#C17D55" />
         </View>
 
         <Text style={styles.appName}>History</Text>

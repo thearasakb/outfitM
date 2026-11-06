@@ -16,6 +16,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
   Clock3,
+  History,
   Home,
   Shirt,
   User,
@@ -160,7 +161,7 @@ function AppTabs() {
   const icons = {
     Home,
     Wardrobe: Shirt,
-    Saved: Clock3,
+    Saved: History,
     Profile: User,
   };
 
